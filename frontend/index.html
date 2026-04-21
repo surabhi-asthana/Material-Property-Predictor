@@ -1189,7 +1189,7 @@ btnAnalyze.addEventListener('click', () => {
       const formData = new FormData();
       formData.append('file', currentFile);
 
-      fetch('http://localhost:8000/predict', { method: 'POST', body: formData })
+      fetch('https://material-api-fxuv.onrender.com', { method: 'POST', body: formData })
         .then(r => r.json())
         .then(data => {
             console.log("Backend response:", data);
@@ -1268,7 +1268,7 @@ document.getElementById('btnAskAI').addEventListener('click', async () => {
   responseBox.classList.remove('visible');
 
   try {
-    const res = await fetch('http://localhost:8000/explain', {
+    const res = await fetch('https://material-api-fxuv.onrender.com', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -1303,7 +1303,7 @@ async function askCrystal() {
   loader.style.display      = 'block';
 
   try {
-    const res = await fetch('http://localhost:8000/ask', {
+    const res = await fetch('https://material-api-fxuv.onrender.com', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
