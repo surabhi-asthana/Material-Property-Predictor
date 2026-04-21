@@ -7,3 +7,6 @@ numpy
 pymatgen
 scikit-learn
 torch-geometric
+google
+google-genai
+google-generativeai
