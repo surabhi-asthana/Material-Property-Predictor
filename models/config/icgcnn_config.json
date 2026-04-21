@@ -1,0 +1,9 @@
+{
+  "orig_atom_fea_len": 92,
+  "nbr_fea_len": 41,
+  "atom_fea_len": 64,
+  "n_conv": 3,
+  "h_fea_len": 128,
+  "atom_init_path": "models/config/atom_init.json",
+  "scaler_path": "models/config/icgcnn_scalers.json"
+}

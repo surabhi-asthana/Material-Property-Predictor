@@ -1,0 +1,7 @@
+.env
+__pycache__/
+*.pyc
+*.pth
+*.pt
+gnn_env/
+temp_uploads/

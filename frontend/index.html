@@ -1,0 +1,1329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Material Property Predictor</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --cream: #faf8f3;
+      --warm-white: #ffffff;
+      --ink: #1a1a1a;
+      --ink-mid: #3d3d3d;
+      --ink-light: #7a7a7a;
+      --gold: #b8860b;
+      --gold-light: #d4a017;
+      --gold-pale: #f5e9c8;
+      --border: #d6cdb8;
+      --border-light: #e8e2d4;
+      --shadow: rgba(26,26,26,0.08);
+      --shadow-deep: rgba(26,26,26,0.16);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Times New Roman', Times, serif;
+      background: var(--cream);
+      color: var(--ink);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    /* ── HEADER ─────────────────────────────────────── */
+    header {
+      background: var(--warm-white);
+      border-bottom: 2px solid var(--gold);
+      padding: 0 60px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 12px var(--shadow);
+    }
+
+    .header-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      padding: 22px 0;
+    }
+
+    .logo-mark {
+      width: 42px;
+      height: 42px;
+      flex-shrink: 0;
+    }
+
+    .site-title {
+      font-family: 'Times New Roman', Times, serif;
+      font-size: 1.55rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      color: var(--ink);
+      text-transform: uppercase;
+      line-height: 1.15;
+    }
+
+    .header-rule {
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(to right, var(--border), transparent);
+      margin-left: 12px;
+    }
+
+    /* ── HERO ────────────────────────────────────────── */
+    .hero {
+      background: var(--warm-white);
+      border-bottom: 1px solid var(--border-light);
+      padding: 64px 60px 56px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 60% 80% at 50% 120%, rgba(184,134,11,0.07) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-ornament {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      margin-bottom: 24px;
+    }
+
+    .ornament-line {
+      width: 80px;
+      height: 1px;
+      background: linear-gradient(to right, transparent, var(--gold));
+    }
+    .ornament-line.right {
+      background: linear-gradient(to left, transparent, var(--gold));
+    }
+
+    .ornament-diamond {
+      width: 8px; height: 8px;
+      background: var(--gold);
+      transform: rotate(45deg);
+    }
+
+    .hero h1 {
+      font-family: 'Times New Roman', Times, serif;
+      font-size: clamp(2rem, 4vw, 3.2rem);
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ink);
+      line-height: 1.1;
+      margin-bottom: 16px;
+      position: relative;
+    }
+
+    .hero-sub {
+      font-size: 1rem;
+      color: var(--ink-light);
+      letter-spacing: 0.08em;
+      font-style: italic;
+    }
+
+    /* ── MAIN ────────────────────────────────────────── */
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 56px 60px 80px;
+      display: flex;
+      flex-direction: column;
+      gap: 52px;
+    }
+
+    /* ── SECTION CARD ────────────────────────────────── */
+    .section-card {
+      background: var(--warm-white);
+      border: 1px solid var(--border);
+      box-shadow: 0 4px 24px var(--shadow);
+      position: relative;
+    }
+
+    .section-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(to right, var(--gold), var(--gold-light), var(--gold));
+    }
+
+    .section-head {
+      padding: 28px 36px 24px;
+      border-bottom: 1px solid var(--border-light);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .section-number {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      color: var(--gold);
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border: 1px solid var(--gold);
+      line-height: 1;
+    }
+
+    .section-title {
+      font-family: 'Times New Roman', Times, serif;
+      font-size: 1.2rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--ink);
+    }
+
+    .section-body {
+      padding: 36px;
+    }
+
+    /* ── UPLOAD ZONE ─────────────────────────────────── */
+    .upload-zone {
+      border: 2px dashed var(--border);
+      padding: 56px 36px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      position: relative;
+      background: var(--cream);
+    }
+
+    .upload-zone:hover,
+    .upload-zone.drag-over {
+      border-color: var(--gold);
+      background: var(--gold-pale);
+    }
+
+    .upload-zone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+
+    .upload-icon {
+      margin: 0 auto 20px;
+      width: 52px;
+      height: 52px;
+      color: var(--gold);
+    }
+
+    .upload-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      color: var(--ink);
+      margin-bottom: 8px;
+    }
+
+    .upload-hint {
+      font-size: 0.9rem;
+      color: var(--ink-light);
+      font-style: italic;
+    }
+
+    .upload-badge {
+      display: inline-block;
+      margin-top: 16px;
+      padding: 4px 14px;
+      background: var(--gold-pale);
+      border: 1px solid var(--gold);
+      color: var(--gold);
+      font-size: 0.75rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    /* File status */
+    .file-status {
+      margin-top: 20px;
+      display: none;
+      align-items: center;
+      gap: 14px;
+      padding: 16px 20px;
+      background: var(--gold-pale);
+      border: 1px solid var(--gold);
+    }
+
+    .file-status.visible { display: flex; }
+
+    .file-status-icon { color: var(--gold); flex-shrink: 0; }
+
+    .file-status-info { flex: 1; }
+    .file-status-name {
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: var(--ink);
+    }
+    .file-status-meta {
+      font-size: 0.8rem;
+      color: var(--ink-light);
+      font-style: italic;
+    }
+
+    .btn-analyze {
+      margin-top: 24px;
+      width: 100%;
+      padding: 14px;
+      background: var(--ink);
+      color: var(--warm-white);
+      border: none;
+      font-family: 'Times New Roman', Times, serif;
+      font-size: 0.95rem;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.2s;
+      display: none;
+    }
+
+    .btn-analyze:hover { background: var(--gold); }
+    .btn-analyze.visible { display: block; }
+
+    /* ── GRAPH SECTION ───────────────────────────────── */
+    .graph-placeholder {
+      min-height: 420px;
+      background: var(--cream);
+      border: 1px solid var(--border-light);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      color: var(--ink-light);
+      text-align: center;
+      padding: 40px;
+    }
+
+    .graph-placeholder-icon { opacity: 0.35; }
+
+    .graph-placeholder-text {
+      font-size: 1rem;
+      font-style: italic;
+      opacity: 0.7;
+    }
+
+    /* 3D canvas container */
+    #crystal-canvas-wrap {
+      display: none;
+      width: 100%;
+      height: 460px;
+      position: relative;
+      background: #0d0d12;
+      border: 1px solid var(--border);
+    }
+
+    #crystal-canvas-wrap canvas {
+      display: block;
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+    .canvas-label {
+      position: absolute;
+      top: 14px;
+      left: 18px;
+      font-size: 0.75rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.45);
+    }
+
+    .canvas-file-label {
+      position: absolute;
+      top: 14px;
+      right: 18px;
+      font-size: 0.75rem;
+      letter-spacing: 0.12em;
+      color: rgba(212,160,23,0.8);
+      font-style: italic;
+    }
+
+    /* Info grid */
+    .info-grid {
+      display: none;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 1px;
+      background: var(--border-light);
+      border: 1px solid var(--border);
+      margin-top: 20px;
+    }
+
+    .info-grid.visible { display: grid; }
+
+    .info-cell {
+      background: var(--warm-white);
+      padding: 18px 20px;
+    }
+
+    .info-cell-label {
+      font-size: 0.7rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--ink-light);
+      margin-bottom: 4px;
+    }
+
+    .info-cell-value {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .info-cell-value.gold { color: var(--gold); }
+
+    /* Loading */
+    .loading-bar-wrap {
+      display: none;
+      margin-top: 20px;
+      height: 3px;
+      background: var(--border-light);
+    }
+    .loading-bar-wrap.visible { display: block; }
+    .loading-bar {
+      height: 100%;
+      background: linear-gradient(to right, var(--gold), var(--gold-light));
+      width: 0%;
+      transition: width 0.4s ease;
+    }
+
+    /* ── NEW: PROPERTY PREDICTION SECTION ───────────── */
+    .prop-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 1px;
+      background: var(--border-light);
+      border: 1px solid var(--border);
+      margin-bottom: 28px;
+    }
+
+    .prop-cell {
+      background: var(--warm-white);
+      padding: 20px 22px;
+      transition: background 0.2s;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .prop-cell:hover { background: var(--gold-pale); }
+
+    .prop-cell.active {
+      background: var(--gold-pale);
+      border-bottom: 2px solid var(--gold);
+    }
+
+    .prop-cell-label {
+      font-size: 0.68rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--ink-light);
+      margin-bottom: 6px;
+    }
+
+    .prop-cell-value {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--gold);
+      letter-spacing: 0.04em;
+    }
+
+    .prop-cell-unit {
+      font-size: 0.75rem;
+      color: var(--ink-light);
+      font-style: italic;
+      margin-top: 2px;
+    }
+
+    .prop-cell-pending {
+      font-size: 1.3rem;
+      color: var(--border);
+      font-weight: 700;
+    }
+
+    .model-badge-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+
+    .model-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      border: 1px solid var(--gold);
+      background: var(--gold-pale);
+      font-size: 0.75rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      font-weight: 700;
+      color: var(--gold);
+    }
+
+    .confidence-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border: 1px solid var(--border);
+      background: var(--cream);
+      font-size: 0.75rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ink-light);
+    }
+
+    .confidence-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: #4caf50;
+      flex-shrink: 0;
+    }
+
+    .prop-placeholder-text {
+      text-align: center;
+      padding: 40px 20px;
+      font-style: italic;
+      color: var(--ink-light);
+      font-size: 0.95rem;
+      border: 1px dashed var(--border);
+      background: var(--cream);
+    }
+
+    /* ── NEW: AI REVIEW SECTION ──────────────────────── */
+    .btn-ai {
+      padding: 13px 36px;
+      background: var(--ink);
+      color: var(--warm-white);
+      border: none;
+      font-family: 'Times New Roman', Times, serif;
+      font-size: 0.9rem;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.2s;
+      display: block;
+      width: 100%;
+    }
+
+    .btn-ai:hover:not(:disabled) { background: var(--gold); }
+    .btn-ai:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .ai-prop-selector {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+
+    .ai-prop-btn {
+      padding: 6px 16px;
+      border: 1px solid var(--border);
+      background: var(--cream);
+      font-family: 'Times New Roman', Times, serif;
+      font-size: 0.8rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      color: var(--ink-light);
+      transition: all 0.18s;
+    }
+
+    .ai-prop-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+    .ai-prop-btn.selected {
+      background: var(--gold-pale);
+      border-color: var(--gold);
+      color: var(--gold);
+      font-weight: 700;
+    }
+
+    .ai-response-box {
+      min-height: 100px;
+      padding: 24px 28px;
+      background: var(--cream);
+      border: 1px solid var(--border-light);
+      border-left: 3px solid var(--gold);
+      font-size: 0.95rem;
+      color: var(--ink-mid);
+      line-height: 1.8;
+      font-style: italic;
+      display: none;
+    }
+
+    .ai-response-box.visible { display: block; }
+
+    .ai-placeholder-text {
+      text-align: center;
+      padding: 36px 20px;
+      font-style: italic;
+      color: var(--ink-light);
+      font-size: 0.9rem;
+    }
+
+    /* ── FOOTER ──────────────────────────────────────── */
+    footer {
+      border-top: 1px solid var(--border);
+      text-align: center;
+      padding: 28px;
+      font-size: 0.8rem;
+      color: var(--ink-light);
+      letter-spacing: 0.1em;
+      background: var(--warm-white);
+    }
+
+    .suggestion-chip {
+    padding: 6px 14px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    color: var(--text-secondary);
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .suggestion-chip:hover {
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+
+    /* Responsive */
+    @media (max-width: 680px) {
+      header { padding: 0 20px; }
+      main { padding: 32px 20px 60px; }
+      .hero { padding: 40px 20px 36px; }
+      .section-body { padding: 24px 20px; }
+      .section-head { padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="header-inner">
+    <svg class="logo-mark" viewBox="0 0 42 42" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="21,3 39,12 39,30 21,39 3,30 3,12" fill="none" stroke="#b8860b" stroke-width="1.5"/>
+      <polygon points="21,10 32,16 32,28 21,34 10,28 10,16" fill="none" stroke="#b8860b" stroke-width="1"/>
+      <circle cx="21" cy="21" r="3.5" fill="#b8860b"/>
+      <line x1="21" y1="3" x2="21" y2="10" stroke="#b8860b" stroke-width="1"/>
+      <line x1="21" y1="34" x2="21" y2="39" stroke="#b8860b" stroke-width="1"/>
+      <line x1="39" y1="12" x2="32" y2="16" stroke="#b8860b" stroke-width="1"/>
+      <line x1="3" y1="12" x2="10" y2="16" stroke="#b8860b" stroke-width="1"/>
+      <line x1="39" y1="30" x2="32" y2="28" stroke="#b8860b" stroke-width="1"/>
+      <line x1="3" y1="30" x2="10" y2="28" stroke="#b8860b" stroke-width="1"/>
+    </svg>
+    <div>
+      <div class="site-title">Material Property Predictor</div>
+    </div>
+    <div class="header-rule"></div>
+  </div>
+</header>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-ornament">
+    <div class="ornament-line"></div>
+    <div class="ornament-diamond"></div>
+    <div class="ornament-line right"></div>
+  </div>
+  <h1>Material Property Predictor</h1>
+</div>
+
+<!-- MAIN -->
+<main>
+
+  <!-- SECTION 1: CIF UPLOAD — UNCHANGED -->
+  <div class="section-card">
+    <div class="section-body">
+
+      <div class="upload-zone" id="uploadZone">
+        <input type="file" id="cifInput" accept=".cif" />
+        <svg class="upload-icon" viewBox="0 0 52 52" fill="none" stroke="currentColor" stroke-width="1.5" xmlns="http://www.w3.org/2000/svg">
+          <rect x="8" y="14" width="36" height="30" rx="2"/>
+          <path d="M18 14V10a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v4"/>
+          <line x1="26" y1="22" x2="26" y2="36"/>
+          <polyline points="20,28 26,22 32,28"/>
+        </svg>
+        <div class="upload-title">Drop your CIF file here</div>
+        <div class="upload-hint">or click to browse from your computer</div>
+      </div>
+
+      <div class="file-status" id="fileStatus">
+        <svg class="file-status-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+        </svg>
+        <div class="file-status-info">
+          <div class="file-status-name" id="fileName">—</div>
+          <div class="file-status-meta" id="fileMeta">—</div>
+        </div>
+      </div>
+
+      <div class="loading-bar-wrap" id="loadingBarWrap">
+        <div class="loading-bar" id="loadingBar"></div>
+      </div>
+
+      <button class="btn-analyze" id="btnAnalyze">
+        ▶ &nbsp; Analyse Structure
+      </button>
+
+    </div>
+  </div>
+
+  <!-- SECTION 2: GRAPH / VISUALISATION — UNCHANGED -->
+  <div class="section-card">
+    <div class="section-body">
+
+      <div class="graph-placeholder" id="graphPlaceholder">
+        <svg class="graph-placeholder-icon" width="72" height="72" viewBox="0 0 72 72" fill="none" stroke="#b8860b" stroke-width="1.4" xmlns="http://www.w3.org/2000/svg">
+          <polygon points="36,6 60,20 60,52 36,66 12,52 12,20"/>
+          <polygon points="36,18 50,26 50,46 36,54 22,46 22,26"/>
+          <circle cx="36" cy="36" r="5"/>
+          <line x1="36" y1="6" x2="36" y2="18"/>
+          <line x1="36" y1="54" x2="36" y2="66"/>
+          <line x1="60" y1="20" x2="50" y2="26"/>
+          <line x1="12" y1="20" x2="22" y2="26"/>
+          <line x1="60" y1="52" x2="50" y2="46"/>
+          <line x1="12" y1="52" x2="22" y2="46"/>
+        </svg>
+        <p class="graph-placeholder-text">Awaiting CIF file — the crystal structure will render here</p>
+      </div>
+
+      <div id="crystal-canvas-wrap">
+        <span class="canvas-label">3D Crystal Structure</span>
+        <span class="canvas-file-label" id="canvasFileLabel"></span>
+        <canvas id="crystalCanvas"></canvas>
+      </div>
+
+      <div class="info-grid" id="infoGrid">
+        <div class="info-cell">
+          <div class="info-cell-label">Space Group</div>
+          <div class="info-cell-value gold" id="igSpaceGroup">—</div>
+        </div>
+        <div class="info-cell">
+          <div class="info-cell-label">Lattice System</div>
+          <div class="info-cell-value" id="igLattice">—</div>
+        </div>
+        <div class="info-cell">
+          <div class="info-cell-label">a (Å)</div>
+          <div class="info-cell-value" id="igA">—</div>
+        </div>
+        <div class="info-cell">
+          <div class="info-cell-label">b (Å)</div>
+          <div class="info-cell-value" id="igB">—</div>
+        </div>
+        <div class="info-cell">
+          <div class="info-cell-label">c (Å)</div>
+          <div class="info-cell-value" id="igC">—</div>
+        </div>
+        <div class="info-cell">
+          <div class="info-cell-label">α / β / γ (°)</div>
+          <div class="info-cell-value" id="igAngles">—</div>
+        </div>
+        <div class="info-cell">
+          <div class="info-cell-label">Atoms in Unit Cell</div>
+          <div class="info-cell-value gold" id="igAtoms">—</div>
+        </div>
+        <div class="info-cell">
+          <div class="info-cell-label">Chemical Formula</div>
+          <div class="info-cell-value" id="igFormula">—</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- SECTION 3: PROPERTY PREDICTION — NEW -->
+  <div class="section-card" id="predictionSection" style="display:none;">
+    <div class="section-head">
+      <span class="section-number">03</span>
+      <span class="section-title">Property Prediction</span>
+    </div>
+    <div class="section-body">
+
+      <!-- Model + confidence badges -->
+      <div class="model-badge-row" id="modelBadgeRow" style="display:none;">
+        <div class="model-badge" id="modelBadge">— Model</div>
+        <div class="confidence-badge">
+          <span class="confidence-dot"></span>
+          <span id="confidenceText">High Confidence</span>
+        </div>
+      </div>
+
+      <!-- 5 property cells -->
+      <div class="prop-grid" id="propGrid">
+        <div class="prop-cell" id="cell-formation_energy">
+          <div class="prop-cell-label">Formation Energy</div>
+          <div class="prop-cell-pending">—</div>
+          <div class="prop-cell-unit">eV/atom</div>
+        </div>
+        <div class="prop-cell" id="cell-band_gap">
+          <div class="prop-cell-label">Band Gap</div>
+          <div class="prop-cell-pending">—</div>
+          <div class="prop-cell-unit">eV</div>
+        </div>
+        <div class="prop-cell" id="cell-fermi_energy">
+          <div class="prop-cell-label">Fermi Energy</div>
+          <div class="prop-cell-pending">—</div>
+          <div class="prop-cell-unit">eV</div>
+        </div>
+        <div class="prop-cell" id="cell-hull_distance">
+          <div class="prop-cell-label">Hull Distance</div>
+          <div class="prop-cell-pending">—</div>
+          <div class="prop-cell-unit">eV/atom</div>
+        </div>
+        <div class="prop-cell" id="cell-magnetization">
+          <div class="prop-cell-label">Magnetization</div>
+          <div class="prop-cell-pending">—</div>
+          <div class="prop-cell-unit">μB/atom</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- SECTION 4: AI REVIEW — NEW -->
+  <div class="section-card" id="aiSection" style="display:none;">
+    <div class="section-head">
+      <span class="section-number">04</span>
+      <span class="section-title">AI Review</span>
+    </div>
+    <div class="section-body">
+
+      <!-- Property selector pills -->
+      <div class="ai-prop-selector" id="aiPropSelector">
+        <button class="ai-prop-btn selected" data-prop="formation_energy" data-unit="eV/atom">Formation Energy</button>
+        <button class="ai-prop-btn" data-prop="band_gap"        data-unit="eV">Band Gap</button>
+        <button class="ai-prop-btn" data-prop="fermi_energy"    data-unit="eV">Fermi Energy</button>
+        <button class="ai-prop-btn" data-prop="hull_distance"   data-unit="eV/atom">Hull Distance</button>
+        <button class="ai-prop-btn" data-prop="magnetization"   data-unit="μB/atom">Magnetization</button>
+      </div>
+
+      <button class="btn-ai" id="btnAskAI">✦ &nbsp; Ask AI Review</button>
+
+      <div style="margin-top: 24px;">
+        <div class="ai-placeholder-text" id="aiPlaceholder">
+          Select a property above and click Ask AI Review for a plain-language explanation.
+        </div>
+        <div class="ai-response-box" id="aiResponseBox"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Section 05: Ask the Crystal -->
+<div class="section-card" id="askSection" style="display:none;">
+  <div class="section-head">
+    <span class="section-number">05</span>
+    <span class="section-title">Ask About This Crystal</span>
+  </div>
+  <div class="section-body">
+    <p style="color:var(--text-secondary); margin-bottom:16px; font-size:0.9rem;">
+      Ask any question about the practical use, stability, or applications of this crystal based on its predicted properties.
+    </p>
+    <div style="display:flex; gap:10px; margin-bottom:16px;">
+      <input
+        type="text"
+        id="crystalQuestion"
+        placeholder="e.g. Is this crystal suitable for solar cells?"
+        style="flex:1; padding:12px 16px; background:var(--surface);
+               border:1px solid var(--border); border-radius:8px;
+               color:var(--text-primary); font-size:0.95rem; outline:none;"
+        onkeydown="if(event.key==='Enter') askCrystal()"
+      />
+      <button onclick="askCrystal()" style="
+        padding:12px 24px; background:var(--gold); color:#000;
+        border:none; border-radius:8px; font-weight:600;
+        cursor:pointer; font-size:0.95rem; white-space:nowrap;">
+        Ask
+      </button>
+    </div>
+
+
+    <div id="askResponseBox" style="
+      display:none; padding:18px; background:var(--surface);
+      border:1px solid var(--border); border-radius:10px;
+      color:var(--text-primary); line-height:1.7; font-size:0.95rem;
+      white-space:pre-wrap;">
+    </div>
+    <div id="askLoader" style="display:none; color:var(--text-secondary); font-size:0.9rem;">
+      Thinking...
+    </div>
+  </div>
+</div>
+
+</main>
+
+<footer>
+  &copy; 2026 &ensp;·&ensp; Material Property Predictor &ensp;·&ensp; Crystallographic Analysis Suite
+</footer>
+
+<script>
+/* ═══════════════════════════════════════════════
+   CIF PARSER  (minimal, handles standard CIF)
+═══════════════════════════════════════════════ */
+function parseCIF(text) {
+  const get = (key) => {
+    const r = new RegExp(`_${key}\\s+([^\\s#]+)`, 'i');
+    const m = text.match(r);
+    return m ? m[1].replace(/'/g,"").replace(/"/g,"") : null;
+  };
+
+  const getLine = (key) => {
+    const r = new RegExp(`_${key}\\s+(.+?)(?:\\r?\\n|$)`, 'i');
+    const m = text.match(r);
+    if (!m) return null;
+    return m[1].replace(/'/g,"").replace(/"/g,"").replace(/\r/g,"").trim();
+  };
+
+  const a = parseFloat(get('cell_length_a')) || 5;
+  const b = parseFloat(get('cell_length_b')) || 5;
+  const c = parseFloat(get('cell_length_c')) || 5;
+  const alpha = parseFloat(get('cell_angle_alpha')) || 90;
+  const beta  = parseFloat(get('cell_angle_beta'))  || 90;
+  const gamma = parseFloat(get('cell_angle_gamma')) || 90;
+  const spaceGroup = get('symmetry_space_group_name_H-M') ||
+                     get('space_group_name_H-M_alt') ||
+                     get('symmetry_Int_Tables_number') || 'P 1';
+  const formula = getLine('chemical_formula_sum') ||
+                  getLine('chemical_formula_structural') || '—';
+
+  const atoms = [];
+  const atomSiteBlock = text.match(/loop_[\s\S]*?_atom_site[\s\S]*?(?=loop_|$)/i);
+  if (atomSiteBlock) {
+    const block = atomSiteBlock[0];
+    const headers = [...block.matchAll(/_atom_site_(\S+)/gi)].map(m => m[1].toLowerCase());
+    const lx = headers.indexOf('fract_x');
+    const ly = headers.indexOf('fract_y');
+    const lz = headers.indexOf('fract_z');
+    const lt = headers.indexOf('type_symbol') !== -1 ? headers.indexOf('type_symbol')
+               : headers.indexOf('label');
+    const dataLines = block.split('\n').filter(l => l.trim() && !l.trim().startsWith('_') && !l.trim().startsWith('loop_') && !l.trim().startsWith('#'));
+    dataLines.forEach(line => {
+      const parts = line.trim().split(/\s+/);
+      if (parts.length >= Math.max(lx, ly, lz) + 1) {
+        const type = lt >= 0 ? parts[lt].replace(/\d+/g,'').replace(/[+-]/g,'') : 'X';
+        const fx = parseFloat(parts[lx]);
+        const fy = parseFloat(parts[ly]);
+        const fz = parseFloat(parts[lz]);
+        if (!isNaN(fx) && !isNaN(fy) && !isNaN(fz)) {
+          atoms.push({ type, fx, fy, fz });
+        }
+      }
+    });
+  }
+
+  let lattice = 'Triclinic';
+  if (alpha===90 && beta===90 && gamma===90) {
+    if (a===b && b===c) lattice = 'Cubic';
+    else if (a===b) lattice = 'Tetragonal';
+    else lattice = 'Orthorhombic';
+  } else if (gamma===120 && alpha===90 && beta===90) lattice = 'Hexagonal';
+  else if (alpha===90 && gamma===90) lattice = 'Monoclinic';
+
+  return { a, b, c, alpha, beta, gamma, spaceGroup, formula, atoms, lattice };
+}
+
+/* ═══════════════════════════════════════════════
+   THREE.JS RENDERER
+═══════════════════════════════════════════════ */
+const ELEMENT_COLORS = {
+  H:'#e8e8e8',Li:'#cc80ff',Be:'#c2ff00',B:'#ffb5b5',C:'#909090',N:'#3050f8',
+  O:'#ff0d0d',F:'#90e050',Na:'#ab5cf2',Mg:'#8aff00',Al:'#bfa6a6',Si:'#f0c8a0',
+  P:'#ff8000',S:'#ffff30',Cl:'#1ff01f',K:'#8f40d4',Ca:'#3dff00',Fe:'#e06633',
+  Cu:'#c88033',Zn:'#7d80b0',Ga:'#c28f8f',As:'#bd80e3',Se:'#ffa100',Br:'#a62929',
+  Sr:'#00ff00',Mo:'#54b5b5',Ag:'#c0c0c0',I:'#940094',Ba:'#00c900',Au:'#ffd123',
+  Pb:'#575961',Bi:'#9e4fb5', DEFAULT:'#b8860b'
+};
+
+let renderer, scene, camera, animId, controls_custom;
+
+function initThree(cif) {
+  const wrap = document.getElementById('crystal-canvas-wrap');
+  const canvas = document.getElementById('crystalCanvas');
+
+  if (renderer) { renderer.dispose(); }
+  if (animId) cancelAnimationFrame(animId);
+
+  renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+  renderer.setPixelRatio(window.devicePixelRatio);
+  renderer.setSize(wrap.clientWidth, wrap.clientHeight);
+  renderer.setClearColor(0x0d0d12, 1);
+
+  scene = new THREE.Scene();
+
+  camera = new THREE.PerspectiveCamera(45, wrap.clientWidth / wrap.clientHeight, 0.1, 500);
+  camera.position.set(0, 0, 22);
+
+  const amb = new THREE.AmbientLight(0xffffff, 0.55);
+  scene.add(amb);
+  const dir1 = new THREE.DirectionalLight(0xffeebb, 1.2);
+  dir1.position.set(10, 15, 10);
+  scene.add(dir1);
+  const dir2 = new THREE.DirectionalLight(0x8899ff, 0.4);
+  dir2.position.set(-10, -5, -8);
+  scene.add(dir2);
+  const point = new THREE.PointLight(0xd4a017, 0.8, 80);
+  point.position.set(0, 8, 6);
+  scene.add(point);
+
+  const { a, b, c, alpha, beta, gamma, atoms } = cif;
+  const scale = 10 / Math.max(a, b, c);
+
+  const toRad = d => d * Math.PI / 180;
+  const cosA = Math.cos(toRad(alpha)), cosB = Math.cos(toRad(beta)), cosG = Math.cos(toRad(gamma));
+  const sinG = Math.sin(toRad(gamma));
+  const vol_fac = Math.sqrt(1 - cosA*cosA - cosB*cosB - cosG*cosG + 2*cosA*cosB*cosG);
+
+  function fracToCart(fx, fy, fz) {
+    const x = (a*fx + b*cosG*fy + c*cosB*fz) * scale;
+    const y = (b*sinG*fy + c*(cosA - cosB*cosG)/sinG * fz) * scale;
+    const z = (c * vol_fac / sinG * fz) * scale;
+    return new THREE.Vector3(x, y, z);
+  }
+
+  const centre = fracToCart(0.5, 0.5, 0.5);
+
+  const corners = [
+    [0,0,0],[1,0,0],[0,1,0],[1,1,0],
+    [0,0,1],[1,0,1],[0,1,1],[1,1,1]
+  ].map(([fx,fy,fz]) => fracToCart(fx,fy,fz).sub(centre));
+
+  const edgePairs = [
+    [0,1],[2,3],[4,5],[6,7],
+    [0,2],[1,3],[4,6],[5,7],
+    [0,4],[1,5],[2,6],[3,7]
+  ];
+
+  const edgeMat = new THREE.LineBasicMaterial({ color: 0xd4a017, linewidth: 1, transparent: true, opacity: 0.55 });
+  edgePairs.forEach(([i,j]) => {
+    const geo = new THREE.BufferGeometry().setFromPoints([corners[i], corners[j]]);
+    scene.add(new THREE.Line(geo, edgeMat));
+  });
+
+  const atomsToRender = atoms.length > 0 ? atoms : [
+    {type:'Fe',fx:0,fy:0,fz:0},{type:'Fe',fx:0.5,fy:0.5,fz:0},
+    {type:'O', fx:0.25,fy:0.25,fz:0.25},{type:'O',fx:0.75,fy:0.75,fz:0.75}
+  ];
+
+  atomsToRender.forEach(({ type, fx, fy, fz }) => {
+    const pos = fracToCart(fx, fy, fz).sub(centre);
+    const color = ELEMENT_COLORS[type] || ELEMENT_COLORS.DEFAULT;
+    const radius = type === 'O' ? 0.32 : type === 'H' ? 0.2 : 0.38;
+    const geo = new THREE.SphereGeometry(radius, 24, 24);
+    const mat = new THREE.MeshPhongMaterial({
+      color: new THREE.Color(color),
+      shininess: 80,
+      specular: new THREE.Color(0x444444),
+    });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.copy(pos);
+    scene.add(mesh);
+  });
+
+  const threshold = 3.5 * scale;
+  const bondMat = new THREE.MeshPhongMaterial({ color: 0xc8c8c8, shininess: 30 });
+  const positions = atomsToRender.map(({fx,fy,fz}) => fracToCart(fx,fy,fz).sub(centre));
+
+  for (let i = 0; i < positions.length; i++) {
+    for (let j = i+1; j < positions.length; j++) {
+      const dist = positions[i].distanceTo(positions[j]);
+      if (dist < threshold && dist > 0.01) {
+        const dir = positions[j].clone().sub(positions[i]);
+        const mid = positions[i].clone().add(dir.clone().multiplyScalar(0.5));
+        const cyl = new THREE.CylinderGeometry(0.05, 0.05, dist, 8);
+        const bond = new THREE.Mesh(cyl, bondMat);
+        bond.position.copy(mid);
+        bond.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), dir.clone().normalize());
+        scene.add(bond);
+      }
+    }
+  }
+
+  let isDragging = false, lastX = 0, lastY = 0;
+  const group = new THREE.Group();
+  scene.children.filter(c => c !== amb && c !== dir1 && c !== dir2 && c !== point).forEach(c => {
+    scene.remove(c);
+    group.add(c);
+  });
+  scene.add(group);
+
+  canvas.addEventListener('mousedown', e => { isDragging = true; lastX = e.clientX; lastY = e.clientY; });
+  canvas.addEventListener('mousemove', e => {
+    if (!isDragging) return;
+    group.rotation.y += (e.clientX - lastX) * 0.01;
+    group.rotation.x += (e.clientY - lastY) * 0.01;
+    lastX = e.clientX; lastY = e.clientY;
+  });
+  canvas.addEventListener('mouseup', () => isDragging = false);
+  canvas.addEventListener('mouseleave', () => isDragging = false);
+  canvas.addEventListener('wheel', e => {
+    camera.position.z = Math.max(6, Math.min(60, camera.position.z + e.deltaY * 0.03));
+  });
+
+  let autoRotate = true;
+  canvas.addEventListener('mousedown', () => { autoRotate = false; });
+
+  function animate() {
+    animId = requestAnimationFrame(animate);
+    if (autoRotate) group.rotation.y += 0.004;
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  window.addEventListener('resize', () => {
+    camera.aspect = wrap.clientWidth / wrap.clientHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(wrap.clientWidth, wrap.clientHeight);
+  });
+}
+
+/* ═══════════════════════════════════════════════
+   UI LOGIC — ORIGINAL (unchanged)
+═══════════════════════════════════════════════ */
+const cifInput    = document.getElementById('cifInput');
+const uploadZone  = document.getElementById('uploadZone');
+const fileStatus  = document.getElementById('fileStatus');
+const fileNameEl  = document.getElementById('fileName');
+const fileMetaEl  = document.getElementById('fileMeta');
+const btnAnalyze  = document.getElementById('btnAnalyze');
+const loadingWrap = document.getElementById('loadingBarWrap');
+const loadingBar  = document.getElementById('loadingBar');
+const graphPH     = document.getElementById('graphPlaceholder');
+const canvasWrap  = document.getElementById('crystal-canvas-wrap');
+const canvasLabel = document.getElementById('canvasFileLabel');
+const infoGrid    = document.getElementById('infoGrid');
+
+let currentFile = null;
+let parsedCIF   = null;
+
+function handleFile(file) {
+  if (!file || !file.name.endsWith('.cif')) {
+    alert('Please upload a valid .cif file.');
+    return;
+  }
+  currentFile = file;
+  fileNameEl.textContent = file.name;
+  fileMetaEl.textContent = `${(file.size / 1024).toFixed(1)} KB · CIF Format`;
+  fileStatus.classList.add('visible');
+  btnAnalyze.classList.add('visible');
+}
+
+cifInput.addEventListener('change', e => { if (e.target.files[0]) handleFile(e.target.files[0]); });
+
+uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
+uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
+uploadZone.addEventListener('drop', e => {
+  e.preventDefault();
+  uploadZone.classList.remove('drag-over');
+  handleFile(e.dataTransfer.files[0]);
+});
+
+btnAnalyze.addEventListener('click', () => {
+  if (!currentFile) return;
+  loadingWrap.classList.add('visible');
+  loadingBar.style.width = '0%';
+
+  let pct = 0;
+  const interval = setInterval(() => {
+    pct += Math.random() * 18;
+    if (pct > 90) pct = 90;
+    loadingBar.style.width = pct + '%';
+  }, 120);
+
+  const reader = new FileReader();
+  reader.onload = e => {
+    const text = e.target.result;
+    parsedCIF = parseCIF(text);
+
+    clearInterval(interval);
+    loadingBar.style.width = '100%';
+
+    setTimeout(() => {
+      loadingWrap.classList.remove('visible');
+      loadingBar.style.width = '0%';
+
+      // show 3D — original code
+      graphPH.style.display = 'none';
+      canvasWrap.style.display = 'block';
+      canvasLabel.textContent = currentFile.name;
+      initThree(parsedCIF);
+
+      // fill info grid — original code
+      document.getElementById('igSpaceGroup').textContent = parsedCIF.spaceGroup;
+      document.getElementById('igLattice').textContent    = parsedCIF.lattice;
+      document.getElementById('igA').textContent          = parsedCIF.a.toFixed(4);
+      document.getElementById('igB').textContent          = parsedCIF.b.toFixed(4);
+      document.getElementById('igC').textContent          = parsedCIF.c.toFixed(4);
+      document.getElementById('igAngles').textContent     = `${parsedCIF.alpha}° / ${parsedCIF.beta}° / ${parsedCIF.gamma}°`;
+      document.getElementById('igAtoms').textContent      = parsedCIF.atoms.length || '—';
+      document.getElementById('igFormula').textContent    = parsedCIF.formula;
+      infoGrid.classList.add('visible');
+
+      // ── NEW: call backend predict ──
+      const formData = new FormData();
+      formData.append('file', currentFile);
+
+      fetch('http://localhost:8000/predict', { method: 'POST', body: formData })
+        .then(r => r.json())
+        .then(data => {
+            console.log("Backend response:", data);
+            if (data && data.formation_energy !== undefined) {
+              window.currentPredictions = data;
+              window.cifText = data.cif_text || "";
+              document.getElementById('igFormula').textContent = data.formula || parsedCIF.formula;
+            window.cifText = data.cif_text || "";
+            populatePropGrid(data);
+            document.getElementById('modelBadge').textContent    = data.model_used + ' Model';
+            document.getElementById('confidenceText').textContent = 'Confidence: ' + data.confidence;
+            document.getElementById('modelBadgeRow').style.display = 'flex';
+            document.getElementById('predictionSection').style.display = 'block';
+            document.getElementById('aiSection').style.display = 'block';
+            document.getElementById('askSection').style.display = 'block';
+          }
+        })
+        .catch(err => console.error('Backend unreachable:', err));
+
+    }, 300);
+  };
+  reader.readAsText(currentFile);
+});
+
+/* ═══════════════════════════════════════════════
+   NEW: PROPERTY GRID POPULATION
+═══════════════════════════════════════════════ */
+const PROPERTY_META = {
+  formation_energy: { label: "Formation Energy", unit: "eV/atom" },
+  band_gap:         { label: "Band Gap",          unit: "eV"      },
+  fermi_energy:     { label: "Fermi Energy",      unit: "eV"      },
+  hull_distance:    { label: "Hull Distance",     unit: "eV/atom" },
+  magnetization:    { label: "Magnetization",     unit: "μB/atom" },
+};
+
+function populatePropGrid(data) {
+  Object.keys(PROPERTY_META).forEach(key => {
+    const cell = document.getElementById('cell-' + key);
+    if (!cell) return;
+    const val = data[key];
+    cell.innerHTML = `
+      <div class="prop-cell-label">${PROPERTY_META[key].label}</div>
+      <div class="prop-cell-value">${val !== undefined ? val : '—'}</div>
+      <div class="prop-cell-unit">${PROPERTY_META[key].unit}</div>
+    `;
+  });
+}
+
+/* ═══════════════════════════════════════════════
+   NEW: AI REVIEW LOGIC
+═══════════════════════════════════════════════ */
+let selectedProp = 'formation_energy';
+
+document.querySelectorAll('.ai-prop-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.ai-prop-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    selectedProp = btn.dataset.prop;
+    // reset response when switching property
+    document.getElementById('aiResponseBox').classList.remove('visible');
+    document.getElementById('aiResponseBox').textContent = '';
+    document.getElementById('aiPlaceholder').style.display = 'block';
+  });
+});
+
+document.getElementById('btnAskAI').addEventListener('click', async () => {
+  if (!window.currentPredictions) return;
+
+  const btn        = document.getElementById('btnAskAI');
+  const responseBox = document.getElementById('aiResponseBox');
+  const placeholder = document.getElementById('aiPlaceholder');
+
+  btn.disabled     = true;
+  btn.textContent  = '⏳  Analyzing...';
+  placeholder.style.display = 'none';
+  responseBox.classList.remove('visible');
+
+  try {
+    const res = await fetch('http://localhost:8000/explain', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        property: selectedProp,
+        value:    window.currentPredictions[selectedProp]
+      })
+    });
+    if (!res.ok) throw new Error('API error');
+    const data = await res.json();
+    responseBox.textContent = data.explanation;
+    responseBox.classList.add('visible');
+  } catch (err) {
+    responseBox.textContent = 'AI explanation unavailable. Please check your network or API settings.';
+    responseBox.classList.add('visible');
+    console.error('Explainer error:', err);
+  } finally {
+    btn.disabled    = false;
+    btn.textContent = '✦  Ask AI Review';
+  }
+  function fillQuestion(btn) {
+  document.getElementById('crystalQuestion').value = btn.textContent;
+}
+});
+async function askCrystal() {
+  const question = document.getElementById('crystalQuestion').value.trim();
+  if (!question || !window.currentPredictions) return;
+
+  const responseBox = document.getElementById('askResponseBox');
+  const loader      = document.getElementById('askLoader');
+
+  responseBox.style.display = 'none';
+  loader.style.display      = 'block';
+
+  try {
+    const res = await fetch('http://localhost:8000/ask', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        question:    question,
+        predictions: window.currentPredictions,
+        model_used:  window.currentPredictions.model_used || 'GNN',
+        cif_text:    window.cifText || "" 
+      })
+    });
+    const data = await res.json();
+    responseBox.textContent   = data.answer;
+    responseBox.style.display = 'block';
+  } catch (err) {
+    responseBox.textContent   = 'Failed to get answer. Please try again.';
+    responseBox.style.display = 'block';
+  } finally {
+    loader.style.display = 'none';
+  }
+}
+
+</script>
+</body>
+</html>

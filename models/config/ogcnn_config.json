@@ -1,0 +1,9 @@
+{
+  "orig_atom_fea_len": 1148,
+  "nbr_fea_len": 41,
+  "enc_hidden": 256,
+  "atom_fea_len": 512,
+  "n_conv": 3,
+  "h_fea_len": 128,
+  "scaler_path": "models/config/ogcnn_scalers.json"
+}

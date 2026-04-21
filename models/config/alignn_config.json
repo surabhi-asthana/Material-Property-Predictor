@@ -1,0 +1,30 @@
+{
+  "atom_dim": 92,
+  "hidden": 128,
+  "alignn_layers": 3,
+  "gcn_layers": 3,
+  "dropout": 0.1,
+  "atom_init_path": "models/config/atom_init.json",
+  "scalers":{
+  "formation_energy": {
+    "mean": -1.245468,
+    "std": 1.135239
+  },
+  "band_gap": {
+    "mean": 2.801979,
+    "std": 1.936277
+  },
+  "fermi_energy": {
+    "mean": 1.199071,
+    "std": 2.221273
+  },
+  "hull_distance": {
+    "mean": 0.160493,
+    "std": 0.379711
+  },
+  "magnetization": {
+    "mean": 0.879601,
+    "std": 3.094072
+  }
+}
+}
