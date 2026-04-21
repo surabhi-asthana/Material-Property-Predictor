@@ -1,0 +1,8 @@
+flask
+gunicorn
+torch
+torchvision
+numpy
+pymatgen
+scikit-learn
+torch-geometric
